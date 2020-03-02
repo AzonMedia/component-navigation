@@ -1,11 +1,13 @@
 <template>
-    <b-modal title="Add" id="edit-link-modal" @ok="modal_ok_handler" @cancel="modal_cancel_handler" @show="modal_show_handler">
+    <b-modal title="Edit Link" id="edit-link-modal" @ok="modal_ok_handler" @cancel="modal_cancel_handler" @show="modal_show_handler">
         <div v-if="ModalData.HighlightedLink.link_name">
             <p>Link name: <input v-model="ModalData.HighlightedLink.link_name" type="text"></p>
+            <!--
             <p>Redirect (optional): <input v-model="ModalData.HighlightedLink.link_redirect" type="text" /></p>
             <p>Class (optional): <input v-model="ModalData.HighlightedLink.link_class_name" type="text" /></p>
             <p>Class Action (optional): <input v-model="ModalData.HighlightedLink.link_class_action" type="text" /></p>
             <p>Object Id (optional): <input v-model="ModalData.HighlightedLink.link_object_uuid" type="text" /></p>
+            -->
         </div>
         <div v-else>
             <p>There is no link selected!</p>
@@ -14,6 +16,10 @@
 </template>
 
 <script>
+
+    //todo - allow all properties to be edited like on Add link
+    //load the tab that has data
+
     export default {
         name: "EditLink",
         // props: {

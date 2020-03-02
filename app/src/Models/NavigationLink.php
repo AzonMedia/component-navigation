@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace GuzabaPlatform\Navigation\Models;
 
 use Guzaba2\Base\Exceptions\InvalidArgumentException;
+use Guzaba2\Orm\ActiveRecordCollection;
 use Guzaba2\Orm\Store\Sql\Mysql;
 use GuzabaPlatform\Platform\Application\BaseActiveRecord;
 use GuzabaPlatform\Platform\Application\MysqlConnectionCoroutine;
+use Guzaba2\Translator\Translator as t;
 
 /**
  * Class NavigationLink
@@ -15,9 +17,11 @@ use GuzabaPlatform\Platform\Application\MysqlConnectionCoroutine;
  * @property link_id
  * @property parent_link_id
  * @property link_class_name
+ * @property link_class_action
  * @property link_object_id
  * @property link_name
  * @property link_redirect
+ * @property link_order
  */
 class NavigationLink extends BaseActiveRecord
 {
@@ -29,7 +33,7 @@ class NavigationLink extends BaseActiveRecord
     protected const CONFIG_RUNTIME = [];
 
 
-    public static function create(string $link_name, ?string $parent_link_uuid = NULL, ?string $link_class_name = NULL, ?string $link_object_uuid = NULL, ?string $link_redirect = NULL) : self
+    public static function create(string $link_name, ?string $parent_link_uuid = NULL, ?string $link_class_name = NULL, ?string $link_class_action = NULL, ?string $link_object_uuid = NULL, ?string $link_redirect = NULL) : self
     {
         $parent_link_id = NULL;
         if ($parent_link_uuid) {
@@ -38,8 +42,21 @@ class NavigationLink extends BaseActiveRecord
         }
         $link_object_id = NULL;
         if ($link_class_name && $link_object_uuid) {
+            if (!class_exists($link_class_name)) {
+                //throw
+            }
             $Object = new $link_class_name($link_object_uuid);
             $link_object_id = $Object->get_id();
+        }
+        if ($link_class_name && $link_class_action) {
+            //just validation
+            if (!class_exists($link_class_name)) {
+                //throw
+            }
+            //check method exists...
+        }
+        if ($link_class_name && !$link_class_action && !$link_object_id) {
+            //throw
         }
         if (!$link_name) {
             throw new InvalidArgumentException(sprintf(t::_('No $link_name argument provided.')));
@@ -48,14 +65,60 @@ class NavigationLink extends BaseActiveRecord
         $Link->link_name = $link_name;
         $Link->parent_link_id = $parent_link_id;
         $Link->link_class_name = $link_class_name;
+        $Link->link_class_action = $link_class_action;
         $Link->link_object_id = $link_object_id;
         $Link->link_redirect = $link_redirect;
         $Link->write();
         return $Link;
     }
 
+    /**
+     * Returns the children of this link (one level deep, no recursively)
+     * @return array
+     */
+    public function get_children() : ActiveRecordCollection
+    {
+        return self::data_to_collection(self::get_data_by(['parent_link_id' => $this->get_id()]));
+    }
+
+    public function get_parent() : ?self
+    {
+        return $this->parent_link_id ? new static($this->parent_link_id) : NULL ;
+    }
+
+    public function get_siblings() : ActiveRecordCollection
+    {
+        $ret = [];
+        $siblings = self::get_data_by(['parent_link_id' => $this->parent_link_id],  0,  0, FALSE, 'link_order');
+
+
+        foreach ($siblings as $record) {
+            if ($record['link_id'] !== $this->get_id()) {
+                $ret[] = $record;
+            }
+        }
+        $ret = self::data_to_collection($ret);
+        return $ret;
+    }
+
     protected function _before_delete() : void
     {
-        //delete all child nodes
+        foreach ($this->get_children() as $Link) {
+            $Link->delete();
+        }
+    }
+
+    protected function _before_write() : void
+    {
+        //the newly added link must always be last
+        if ($this->is_new()) {
+            $siblings = $this->get_siblings();
+            if ($siblings) {
+                $this->link_order = $siblings[ count($siblings) - 1]->link_order + 1;
+            } else {
+                $this->link_order = 1;
+            }
+
+        }
     }
 }

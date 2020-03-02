@@ -24,6 +24,7 @@
         <!-- modals -->
         <AddLinkC v-bind:ModalData="ModalData"></AddLinkC>
         <EditLinkC v-bind:ModalData="ModalData"></EditLinkC>
+        <DeleteLinkC v-bind:ModalData="ModalData"></DeleteLinkC>
         <SaveNavigationC v-bind:ModalData="SaveNavigationModalData"></SaveNavigationC>
     </div>
 
@@ -46,7 +47,7 @@
 
     import AddLinkC from '@GuzabaPlatform.Navigation/components/AddLink.vue'
     import EditLinkC from '@GuzabaPlatform.Navigation/components/EditLink.vue'
-    //import DeleteC from '@GuzabaPlatform.Navigation/components/DeleteLink.vue'
+    import DeleteLinkC from '@GuzabaPlatform.Navigation/components/DeleteLink.vue'
     import SaveNavigationC from '@GuzabaPlatform.Platform/components/GenericModal.vue'
 
     import ToastMixin from '@GuzabaPlatform.Platform/ToastMixin.js'
@@ -61,6 +62,7 @@
             ButtonC,
             AddLinkC,
             EditLinkC,
+            DeleteLinkC,
             SaveNavigationC,
         },
         data() {
@@ -87,7 +89,7 @@
                     },
                 },
                 SaveNavigationModalData: {
-                    title : 'Save Navigation',
+                    title : 'Save Navigation Order',
                     text : 'Confirm saving Navigation?',
                     action_url : '/admin/navigation',
                     method: 'patch',

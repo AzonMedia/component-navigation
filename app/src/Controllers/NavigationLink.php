@@ -30,9 +30,9 @@ class NavigationLink extends BaseController
      * @param string $redirect
      * @return ResponseInterface
      */
-    public function create_link(string $link_name, ?string $parent_link_uuid = NULL, ?string $link_class_name = NULL, ?string $link_object_uuid = NULL, ?string $link_redirect = NULL) : ResponseInterface
+    public function create_link(string $link_name, ?string $parent_link_uuid = NULL, ?string $link_class_name = NULL, ?string $link_class_action = NULL, ?string $link_object_uuid = NULL, ?string $link_redirect = NULL) : ResponseInterface
     {
-        $Link = \GuzabaPlatform\Navigation\Models\NavigationLink::create($link_name, $parent_link_uuid, $link_class_name, $link_object_uuid, $link_redirect);
+        $Link = \GuzabaPlatform\Navigation\Models\NavigationLink::create($link_name, $parent_link_uuid, $link_class_name, $link_class_action, $link_object_uuid, $link_redirect);
         $struct = [
             'message' => sprintf(t::_('A link %1s was created.'), $link_name)
         ];
