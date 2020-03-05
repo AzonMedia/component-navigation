@@ -3,20 +3,21 @@
         <p v-if="ModalData.HighlightedLink.link_name">Create a new link under "{{ ModalData.HighlightedLink.link_name }}".</p>
         <p v-else>Create a new root level link.</p>
         <p>Link name: <input v-model="Link.link_name" type="text" placeholder="some link name" /></p>
-        <b-tabs content-class="mt-3">
-            <b-tab title="Holder Link" active>
+        <b-tabs content-class="mt-3" v-model="active_tab">
+            <b-tab title="Holder Link" active  @click="tab_handler">
                 <p>The holder links are used for defining the structure of the navigation.</p>
             </b-tab>
-            <b-tab title="Redirect">
-                <p>Redirect: <input v-model="Link.link_redirect" type="text" placeholder="http://redirect.to/path" /></p>
+            <b-tab title="Redirect" @click="tab_handler">
+                <!-- <p>Redirect: <input v-model="Link.link_redirect" type="text" placeholder="http://redirect.to/path or select" /></p> -->
+                <p>Redirect: <v-select v-model="Link.link_redirect" :options="StaticContent" placeholder="http://redirect.to/path or select from dropdown"></v-select></p>
             </b-tab>
-            <b-tab title="To Controller">
+            <b-tab title="To Controller" @click="tab_handler">
                 <p>Controller Class: <v-select v-model="Link.link_class_name" :options="ControllerClasses"></v-select></p>
                 <p>Action: <v-select v-model="Link.link_class_action" :options="ControllerActions"></v-select></p>
             </b-tab>
-            <b-tab title="To Object">
-                <p>Class: <v-select :options="Classes"></v-select></p>
-                <p>Object: <v-select :options="Objects"></v-select></p>
+            <b-tab title="To Object" @click="tab_handler">
+                <p>Class: <v-select v-model="Link.link_class_name" :options="ModelClasses"></v-select></p>
+                <p>Object: <v-select v-model="Link.link_object_uuid" :options="ModelObjects"></v-select></p>
             </b-tab>
         </b-tabs>
     </b-modal>
@@ -44,13 +45,16 @@
                     link_redirect : '',
                     //parent_link_id: null,
                     parent_link_uuid: null,
-                    link_class_name: '',
+                    link_class_name: '',//both the Controller tab and Object tab use this
                     link_class_action: '',
+                    link_object_uuid: '',
                 },
-                Classes: [],
-                Objects: [],
+                StaticContent: [],
+                ModelClasses: [],
+                ModelObjects: [],
                 ControllerClasses: [],
                 ControllerActions: [],
+                active_tab: 0,
             };
         },
         methods: {
@@ -79,8 +83,59 @@
                 this.Link.parent_link_uuid = this.ModalData.HighlightedLink.meta_object_uuid
                 //console.log(this.Link);
                 this.load_controller_classes();
-
+                this.load_model_classes();
+                this.load_static_content();
             },
+
+            load_static_content() {
+                let url = '/admin/navigation/static-content'
+                let self = this
+                this.$http.get(url).
+                then(function(resp) {
+                    console.log(resp);
+                    //self.StaticContent = resp.data.content
+                    //vue-select currently does not support optgroups https://github.com/sagalbot/vue-select/issues/342
+                    //so instead a holder element will be inserted
+                    let StaticContent = [];
+                    for (const el in resp.data.content) {
+                        StaticContent.push('### ' + el.toUpperCase() + ' ###');
+                        for(const el2 in resp.data.content[el]) {
+                            StaticContent.push(resp.data.content[el][el2]);
+                        }
+                    }
+                    self.StaticContent = StaticContent;
+                }).catch(function(err) {
+                    self.$parent.show_toast(err.response.data.message)
+                })
+            },
+
+            load_model_classes() {
+                let url = '/base/models'
+                let self = this
+                this.$http.get(url).
+                    then(function(resp) {
+                        console.log(resp);
+                        self.ModelClasses = resp.data.models
+                    }).catch(function(err) {
+                        self.$parent.show_toast(err.response.data.message)
+                    })
+            },
+            load_model_objects() {
+                if (this.Link.link_class_name) {
+                    let url = '/base/models/' + this.Link.link_class_name.split('\\').join('-')
+                    let self = this
+                    this.$http.get(url).
+                    then(function(resp) {
+                        self.ModelObjects = resp.data.objects
+                    }).catch(function(err){
+                        self.$parent.show_toast(err.response.data.message)
+                    })
+                } else {
+                    this.Link.link_object_uuid = ''
+                }
+            },
+
+
             load_controller_classes() {
                 let url = '/base/controllers'
                 let self = this
@@ -107,24 +162,31 @@
 
 
             },
-            load_classes() {
 
+            tab_handler() {
+                // this.ControllerClasses = []
+                // this.ControllerActions = []
+                // this.ModelClasses = []
+                // this.ModelObjects = []
             },
-            load_objects() {
-
-            }
         },
         watch: {
             // Link(Link) {
             //     console.log(Link)
             // }
-            Link: {
-                handler(Link) {
-                    //if (Link.link_class_name) {
+            // Link: {
+            //     handler() {
+            //         this.load_controller_actions()
+            //     },
+            //     deep: true
+            // }
+            //watch just the needed properties
+            'Link.link_class_name' : function() {
+                if (this.active_tab === 2) {
                     this.load_controller_actions()
-                    //}
-                },
-                deep: true
+                } else if (this.active_tab === 3) {
+                    this.load_model_objects()
+                }
             }
         }
     }
