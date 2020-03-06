@@ -5,42 +5,29 @@ namespace GuzabaPlatform\Navigation\Controllers;
 
 
 use Guzaba2\Http\Method;
-use Guzaba2\Routing\RoutingMiddleware;
 use GuzabaPlatform\Platform\Application\BaseController;
 use Psr\Http\Message\ResponseInterface;
 
-class StaticContent extends BaseController
+class FrontendRoutes extends BaseController
 {
 
     protected const CONFIG_DEFAULTS = [
         'routes'        => [
-            '/admin/navigation/static-content' => [
+            '/admin/navigation/frontend-routes' => [
                 Method::HTTP_GET => [self::class, 'main'],
             ],
         ],
         'services'      => [
-            'Middlewares'
+            'FrontendRouter'
         ],
     ];
 
     protected const CONFIG_RUNTIME = [];
 
-    /**
-     * @return ResponseInterface
-     */
     public function main() : ResponseInterface
     {
-        $content = [];
-
-
-        $Middlewares = self::get_service('Middlewares');
-        $RoutingMiddleware = $Middlewares->get_middleware(RoutingMiddleware::class);
-        $Router = $RoutingMiddleware->get_router();
-
-        $content['routes'] = $Router->get_routes(Method::HTTP_GET);
-
-        $struct = [ 'content' => $content];
-
+        $routes = self::get_service('FrontendRouter')->get_routes_as_array();
+        $struct = ['routes' => $routes];
         return self::get_structured_ok_response($struct);
     }
 }

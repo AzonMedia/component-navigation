@@ -23,6 +23,7 @@
                 let self = this;
                 this.$http.delete(url).
                 then(function(resp) {
+                    this.ModalData.HighlightedLink = {}
                     self.$parent.show_toast(resp.data.message);
                 }).catch(function(err) {
                     self.$parent.show_toast(err.response.data.message);

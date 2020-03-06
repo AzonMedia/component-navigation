@@ -1,16 +1,19 @@
 <template>
-    <b-modal title="Add Link" id="add-link-modal" @ok="modal_ok_handler" @cancel="modal_cancel_handler" @show="modal_show_handler">
+    <b-modal no-close-on-backdrop title="Add Link" id="add-link-modal" @ok="modal_ok_handler" @cancel="modal_cancel_handler" @show="modal_show_handler">
         <p v-if="ModalData.HighlightedLink.link_name">Create a new link under "{{ ModalData.HighlightedLink.link_name }}".</p>
         <p v-else>Create a new root level link.</p>
         <p>Link name: <input v-model="Link.link_name" type="text" placeholder="some link name" /></p>
+
         <b-tabs content-class="mt-3" v-model="active_tab">
             <b-tab title="Holder Link" active  @click="tab_handler">
                 <p>The holder links are used for defining the structure of the navigation.</p>
             </b-tab>
             <b-tab title="Redirect" @click="tab_handler">
-                <!-- <p>Redirect: <input v-model="Link.link_redirect" type="text" placeholder="http://redirect.to/path or select" /></p> -->
-                <p>Redirect: <v-select v-model="Link.link_redirect" :options="StaticContent" placeholder="http://redirect.to/path or select from dropdown"></v-select></p>
+                <p>Redirect: <input v-model="Link.link_redirect" type="text" placeholder="http://redirect.to/path or select" /></p>
+                <p><v-select v-model="Link.link_redirect" :options="FrontendRoutes" placeholder="http://redirect.to/path or select from dropdown"></v-select></p>
             </b-tab>
+            <!-- the below are server side routes -->
+
             <b-tab title="To Controller" @click="tab_handler">
                 <p>Controller Class: <v-select v-model="Link.link_class_name" :options="ControllerClasses"></v-select></p>
                 <p>Action: <v-select v-model="Link.link_class_action" :options="ControllerActions"></v-select></p>
@@ -19,7 +22,13 @@
                 <p>Class: <v-select v-model="Link.link_class_name" :options="ModelClasses"></v-select></p>
                 <p>Object: <v-select v-model="Link.link_object_uuid" :options="ModelObjects"></v-select></p>
             </b-tab>
+
         </b-tabs>
+
+        <!--
+        <p>Link to: <input v-model="Link.link_redirect" type="text" placeholder="http://redirect.to/path or select" /></p>
+        <p><v-select v-model="Link.link_redirect" :options="FrontendRoutes" placeholder="http://redirect.to/path or select from dropdown"></v-select></p>
+        -->
     </b-modal>
 </template>
 
@@ -49,7 +58,7 @@
                     link_class_action: '',
                     link_object_uuid: '',
                 },
-                StaticContent: [],
+                FrontendRoutes: [],
                 ModelClasses: [],
                 ModelObjects: [],
                 ControllerClasses: [],
@@ -65,7 +74,6 @@
                 this.Link = JSON.parse(JSON.stringify(this.LinkBlank));//copy the object
                 this.$http.post(url, PostData).
                     then(function(resp) {
-                        console.log(resp);
                         self.$parent.show_toast(resp.data.message);
                     }).catch(function(err) {
                         self.$parent.show_toast(err.response.data.message);
@@ -81,29 +89,31 @@
                 this.Link = JSON.parse(JSON.stringify(this.LinkBlank));//copy the object
                 //this.Link.parent_link_id = this.ModalData.HighlightedLink.link_id
                 this.Link.parent_link_uuid = this.ModalData.HighlightedLink.meta_object_uuid
-                //console.log(this.Link);
                 this.load_controller_classes();
                 this.load_model_classes();
-                this.load_static_content();
+                this.load_frontend_routes();
             },
 
-            load_static_content() {
-                let url = '/admin/navigation/static-content'
+            load_frontend_routes() {
+                let url = '/admin/navigation/frontend-routes'
                 let self = this
                 this.$http.get(url).
                 then(function(resp) {
-                    console.log(resp);
                     //self.StaticContent = resp.data.content
                     //vue-select currently does not support optgroups https://github.com/sagalbot/vue-select/issues/342
                     //so instead a holder element will be inserted
-                    let StaticContent = [];
-                    for (const el in resp.data.content) {
-                        StaticContent.push('### ' + el.toUpperCase() + ' ###');
-                        for(const el2 in resp.data.content[el]) {
-                            StaticContent.push(resp.data.content[el][el2]);
+                    let FrontendRoutes = [];
+                    for (const el in resp.data) {
+                        //FrontendRoutes.push('');
+                        FrontendRoutes.push('### ' + el.toUpperCase() + ' ###');
+                        //FrontendRoutes.push('');
+                        console.log(el);
+                        console.log(resp.data[el]);
+                        for(const el2 in resp.data[el]) {
+                            FrontendRoutes.push(resp.data[el][el2]);
                         }
                     }
-                    self.StaticContent = StaticContent;
+                    self.FrontendRoutes = FrontendRoutes;
                 }).catch(function(err) {
                     self.$parent.show_toast(err.response.data.message)
                 })
@@ -114,7 +124,6 @@
                 let self = this
                 this.$http.get(url).
                     then(function(resp) {
-                        console.log(resp);
                         self.ModelClasses = resp.data.models
                     }).catch(function(err) {
                         self.$parent.show_toast(err.response.data.message)
@@ -148,7 +157,7 @@
             },
             load_controller_actions() {
                 if (this.Link.link_class_name) {
-                    let url = '/base/actions/' + this.Link.link_class_name.split('\\').join('-')
+                    let url = '/base/controllers/' + this.Link.link_class_name.split('\\').join('-')
                     let self = this
                     this.$http.get(url).
                     then(function(resp) {
@@ -193,5 +202,8 @@
 </script>
 
 <style scoped>
-
+.add-link-modal {
+    height: 500px;
+    border: 1px solid red;
+}
 </style>
