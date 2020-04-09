@@ -107,8 +107,8 @@
                         //FrontendRoutes.push('');
                         FrontendRoutes.push('### ' + el.toUpperCase() + ' ###');
                         //FrontendRoutes.push('');
-                        console.log(el);
-                        console.log(resp.data[el]);
+                        //console.log(el);
+                        //console.log(resp.data[el]);
                         for(const el2 in resp.data[el]) {
                             FrontendRoutes.push(resp.data[el][el2]);
                         }
@@ -122,8 +122,8 @@
             load_model_classes() {
                 let url = '/base/models'
                 let self = this
-                this.$http.get(url).
-                    then(function(resp) {
+                this.$http.get(url)
+                    .then(function(resp) {
                         self.ModelClasses = resp.data.models
                     }).catch(function(err) {
                         self.$parent.show_toast(err.response.data.message)
@@ -133,12 +133,12 @@
                 if (this.Link.link_class_name) {
                     let url = '/base/models/' + this.Link.link_class_name.split('\\').join('-')
                     let self = this
-                    this.$http.get(url).
-                    then(function(resp) {
-                        self.ModelObjects = resp.data.objects
-                    }).catch(function(err){
-                        self.$parent.show_toast(err.response.data.message)
-                    })
+                    this.$http.get(url)
+                        .then(function(resp) {
+                            self.ModelObjects = resp.data.objects
+                        }).catch(function(err){
+                            self.$parent.show_toast(err.response.data.message)
+                        })
                 } else {
                     this.Link.link_object_uuid = ''
                 }

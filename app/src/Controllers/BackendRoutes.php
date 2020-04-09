@@ -4,9 +4,12 @@ declare(strict_types=1);
 namespace GuzabaPlatform\Navigation\Controllers;
 
 
+use Guzaba2\Base\Exceptions\InvalidArgumentException;
+use Guzaba2\Base\Exceptions\RunTimeException;
 use Guzaba2\Http\Method;
 use Guzaba2\Routing\RoutingMiddleware;
 use GuzabaPlatform\Platform\Application\BaseController;
+use GuzabaPlatform\Platform\Application\Middlewares;
 use Psr\Http\Message\ResponseInterface;
 
 class BackendRoutes extends BaseController
@@ -27,12 +30,14 @@ class BackendRoutes extends BaseController
 
     /**
      * @return ResponseInterface
+     * @throws RunTimeException
+     * @throws InvalidArgumentException
      */
     public function main() : ResponseInterface
     {
         $content = [];
 
-
+        /** @var Middlewares $Middlewares */
         $Middlewares = self::get_service('Middlewares');
         $RoutingMiddleware = $Middlewares->get_middleware(RoutingMiddleware::class);
         $Router = $RoutingMiddleware->get_router();
