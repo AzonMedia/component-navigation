@@ -34,7 +34,7 @@ class NavigationLink extends BaseController
     {
         $Link = \GuzabaPlatform\Navigation\Models\NavigationLink::create($link_name, $parent_link_uuid, $link_class_name, $link_class_action, $link_object_uuid, $link_redirect);
         $struct = [
-            'message' => sprintf(t::_('A link %1s was created.'), $link_name)
+            'message' => sprintf(t::_('A link %1$s was created.'), $link_name)
         ];
         return self::get_structured_ok_response($struct);
     }
