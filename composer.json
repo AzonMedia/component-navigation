@@ -4,7 +4,7 @@
     "description": "Navigation management component for GuzabaPlatform",
     "keywords": ["twitter login"],
     "homepage": "https://github.com/AzonMedia/component-navigation",
-    "license": "BSD-3-Clause",
+    "license": "MIT",
     "minimum-stability": "dev",
     "authors": [
         {

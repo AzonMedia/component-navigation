@@ -14,14 +14,14 @@ use Guzaba2\Translator\Translator as t;
 /**
  * Class NavigationLink
  * @package GuzabaPlatform\Navigation\Models
- * @property link_id
- * @property parent_link_id
- * @property link_class_name
- * @property link_class_action
- * @property link_object_id
- * @property link_name
- * @property link_redirect
- * @property link_order
+ * @property int link_id
+ * @property ?int parent_link_id
+ * @property ?string link_class_name
+ * @property string link_class_action
+ * @property ?int link_object_id
+ * @property string link_name
+ * @property ?string link_redirect
+ * @property int link_order
  */
 class NavigationLink extends BaseActiveRecord
 {
