@@ -20,17 +20,16 @@
             modal_ok_handler(bvModalEvent) {
                 //let url = '/admin/navigation/link/' + this.ModalData.HighlightedLink.link_uuid;
                 let url = '/admin/navigation/link/' + this.ModalData.HighlightedLink.meta_object_uuid;
-                let self = this;
                 this.$http.delete(url).
-                then(function(resp) {
-                    this.ModalData.HighlightedLink = {}
-                    self.$parent.show_toast(resp.data.message);
-                }).catch(function(err) {
-                    self.$parent.show_toast(err.response.data.message);
-                }).finally(function(){
-                    //todo - update the tree without refresh
-                    self.$parent.get_navigation_links();
-                });
+                    then(resp => {
+                        this.ModalData.HighlightedLink = {}
+                        this.$parent.show_toast(resp.data.message);
+                    }).catch(err => {
+                        this.$parent.show_toast(err.response.data.message);
+                    }).finally(() => {
+                        //todo - update the tree without refresh
+                        this.$parent.get_navigation_links();
+                    });
             },
             modal_cancel_handler() {
 

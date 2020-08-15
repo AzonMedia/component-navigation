@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace GuzabaPlatform\Navigation\Controllers;
@@ -8,6 +9,12 @@ use GuzabaPlatform\Platform\Application\BaseController;
 use Psr\Http\Message\ResponseInterface;
 use Guzaba2\Translator\Translator as t;
 
+/**
+ * Class NavigationLink
+ * @package GuzabaPlatform\Navigation\Controllers
+ *
+ * Represents a single link in the navigation.
+ */
 class NavigationLink extends BaseController
 {
 
@@ -38,4 +45,5 @@ class NavigationLink extends BaseController
         ];
         return self::get_structured_ok_response($struct);
     }
+
 }

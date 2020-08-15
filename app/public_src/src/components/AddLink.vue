@@ -5,6 +5,8 @@
         <p>Link name: <input v-model="Link.link_name" type="text" placeholder="some link name" /></p>
 
         <b-tabs content-class="mt-3" v-model="active_tab">
+            <ComponentHookC v-bind:HookData="{ hook_file: '@GuzabaPlatform.Navigation/components/AddLink.vue', 'hook_name': 'BeforeTabs' }"></ComponentHookC>
+
             <b-tab title="Holder Link" active  @click="tab_handler">
                 <p>The holder links are used for defining the structure of the navigation.</p>
             </b-tab>
@@ -12,16 +14,22 @@
                 <p>Redirect: <input v-model="Link.link_redirect" type="text" placeholder="http://redirect.to/path or select" /></p>
                 <p><v-select v-model="Link.link_redirect" :options="FrontendRoutes" placeholder="http://redirect.to/path or select from dropdown"></v-select></p>
             </b-tab>
+
             <!-- the below are server side routes -->
+
 
             <b-tab title="To Controller" @click="tab_handler">
                 <p>Controller Class: <v-select v-model="Link.link_class_name" :options="ControllerClasses"></v-select></p>
                 <p>Action: <v-select v-model="Link.link_class_action" :options="ControllerActions"></v-select></p>
             </b-tab>
+
             <b-tab title="To Object" @click="tab_handler">
                 <p>Class: <v-select v-model="Link.link_class_name" :options="ModelClasses"></v-select></p>
-                <p>Object: <v-select v-model="Link.link_object_uuid" :options="ModelObjects"></v-select></p>
+                <!-- <p>Object: <v-select v-model="Link.link_object_uuid"  label="page_name" :reduce="page_name => page_name.page_name" :options="ModelObjects"></v-select></p> -->
+                <p>Object: <v-select v-model="Link.link_object_uuid"  label="object_name" :reduce="model_object => model_object.meta_object_uuid" :options="ModelObjects"></v-select></p>
             </b-tab>
+
+            <ComponentHookC v-bind:HookData="{ hook_file: '@GuzabaPlatform.Navigation/components/AddLink.vue', 'hook_name': 'AfterTabs' }"></ComponentHookC>
 
         </b-tabs>
 
@@ -29,6 +37,7 @@
         <p>Link to: <input v-model="Link.link_redirect" type="text" placeholder="http://redirect.to/path or select" /></p>
         <p><v-select v-model="Link.link_redirect" :options="FrontendRoutes" placeholder="http://redirect.to/path or select from dropdown"></v-select></p>
         -->
+
     </b-modal>
 </template>
 
@@ -38,10 +47,16 @@
     import 'vue-select/dist/vue-select.css'
     //@import "vue-select/src/scss/vue-select.scss"
 
+    import ComponentHookC from '@GuzabaPlatform.Platform/components/hooks/ComponentHook.vue'
+
+    import AddLinkPageC from '@GuzabaPlatform.Cms/components/hooks/guzaba-platform/navigation/AddLinkPage.vue'
+
     export default {
         name: "AddLink",
         components: {
-            vSelect
+            vSelect,
+            ComponentHookC,
+            AddLinkPageC
         },
         props: {
             ModalData : Object
@@ -67,6 +82,9 @@
             };
         },
         methods: {
+            // test_method() {
+            //     alert('test 1')
+            // },
             modal_ok_handler(bvModalEvent) {
                 let url = '/admin/navigation/link'
                 let PostData = this.Link
@@ -98,46 +116,45 @@
                 let url = '/admin/navigation/frontend-routes'
                 let self = this
                 this.$http.get(url).
-                then(function(resp) {
-                    //self.StaticContent = resp.data.content
-                    //vue-select currently does not support optgroups https://github.com/sagalbot/vue-select/issues/342
-                    //so instead a holder element will be inserted
-                    let FrontendRoutes = [];
-                    for (const el in resp.data) {
-                        //FrontendRoutes.push('');
-                        FrontendRoutes.push('### ' + el.toUpperCase() + ' ###');
-                        //FrontendRoutes.push('');
-                        //console.log(el);
-                        //console.log(resp.data[el]);
-                        for(const el2 in resp.data[el]) {
-                            FrontendRoutes.push(resp.data[el][el2]);
+                    then(function(resp) {
+                        //self.StaticContent = resp.data.content
+                        //vue-select currently does not support optgroups https://github.com/sagalbot/vue-select/issues/342
+                        //so instead a holder element will be inserted
+                        let FrontendRoutes = [];
+                        for (const el in resp.data) {
+                            //FrontendRoutes.push('');
+                            FrontendRoutes.push('### ' + el.toUpperCase() + ' ###');
+                            //FrontendRoutes.push('');
+                            //console.log(el);
+                            //console.log(resp.data[el]);
+                            for(const el2 in resp.data[el]) {
+                                FrontendRoutes.push(resp.data[el][el2]);
+                            }
                         }
-                    }
-                    self.FrontendRoutes = FrontendRoutes;
-                }).catch(function(err) {
-                    self.$parent.show_toast(err.response.data.message)
-                })
+                        self.FrontendRoutes = FrontendRoutes;
+                    }).catch(function(err) {
+                        //self.$parent.show_toast(err.response.data.message)
+                        self.$parent.show_toast(err)
+                    })
             },
 
             load_model_classes() {
                 let url = '/base/models'
-                let self = this
                 this.$http.get(url)
-                    .then(function(resp) {
-                        self.ModelClasses = resp.data.models
-                    }).catch(function(err) {
-                        self.$parent.show_toast(err.response.data.message)
+                    .then( resp => {
+                        this.ModelClasses = resp.data.models
+                    }).catch( err => {
+                        this.$parent.show_toast(err)
                     })
             },
             load_model_objects() {
                 if (this.Link.link_class_name) {
                     let url = '/base/models/' + this.Link.link_class_name.split('\\').join('-')
-                    let self = this
                     this.$http.get(url)
-                        .then(function(resp) {
-                            self.ModelObjects = resp.data.objects
-                        }).catch(function(err){
-                            self.$parent.show_toast(err.response.data.message)
+                        .then( resp => {
+                            this.ModelObjects = resp.data.objects
+                        }).catch( err => {
+                            this.$parent.show_toast(err)
                         })
                 } else {
                     this.Link.link_object_uuid = ''
@@ -147,24 +164,22 @@
 
             load_controller_classes() {
                 let url = '/base/controllers'
-                let self = this
                 this.$http.get(url).
-                    then(function(resp) {
-                        self.ControllerClasses = resp.data.controllers
-                    }).catch(function(err) {
-                        self.$parent.show_toast(err.response.data.message)
+                    then( resp => {
+                        this.ControllerClasses = resp.data.controllers
+                    }).catch( err => {
+                        this.$parent.show_toast(err)
                     })
             },
             load_controller_actions() {
                 if (this.Link.link_class_name) {
                     let url = '/base/controllers/' + this.Link.link_class_name.split('\\').join('-')
-                    let self = this
                     this.$http.get(url).
-                    then(function(resp) {
-                        self.ControllerActions = resp.data.actions
-                    }).catch(function(err){
-                        self.$parent.show_toast(err.response.data.message)
-                    })
+                        then( resp => {
+                            this.ControllerActions = resp.data.actions
+                        }).catch( err => {
+                            this.$parent.show_toast(err)
+                        })
                 } else {
                     this.Link.link_class_action = ''
                 }
