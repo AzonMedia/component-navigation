@@ -16,6 +16,7 @@ use Guzaba2\Orm\Store\Sql\Mysql;
 use Guzaba2\Routing\ActiveRecordDefaultRoutingMap;
 use Guzaba2\Routing\Interfaces\RoutingMiddlewareInterface;
 use Guzaba2\Translator\Translator as t;
+use GuzabaPlatform\Platform\Application\GuzabaPlatform;
 use GuzabaPlatform\Platform\Application\Middlewares;
 use GuzabaPlatform\Platform\Application\MysqlConnectionCoroutine;
 
@@ -128,6 +129,7 @@ ORDER BY
             $_row['link_type'] = self::get_link_type_from_record($_row);
             $_row['link_type_description'] = self::get_link_type_description_from_record($_row);
             $_row['link_location'] = self::get_link_location_from_record($_row);
+            $_row['link_frontend_location'] = self::get_link_frontend_location_from_record($_row);
         }
         unset($_row);
 
@@ -196,6 +198,16 @@ ORDER BY
         return self::get_link_description_from_record($record);
     }
 
+    /**
+     * @param iterable $record
+     * @return string
+     * @throws InvalidArgumentException
+     * @throws LogicException
+     * @throws \Azonmedia\Exceptions\InvalidArgumentException
+     * @throws \Guzaba2\Base\Exceptions\RunTimeException
+     * @throws \Guzaba2\Coroutine\Exceptions\ContextDestroyedException
+     * @throws \ReflectionException
+     */
     public static function get_link_location_from_record(iterable $record): string
     {
         $link_type = self::get_link_type_from_record($record);
@@ -215,7 +227,7 @@ ORDER BY
                 $ret = self::get_route_for_object($Object, Method::HTTP_GET);
                 break;
             case NavigationLink::TYPE['REDIRECT']:
-                $ret = $record['link_redirect'];
+                $ret = $record['link_redirect'];//this is front-end route
                 break;
             default:
                 throw new LogicException(sprintf(t::_('An unexpected link type %1$s was found.'), $link_type));
@@ -225,13 +237,66 @@ ORDER BY
         }
         return $ret;
     }
-    
+
+    /**
+     * @param NavigationLink $Link
+     * @return string
+     * @throws InvalidArgumentException
+     * @throws LogicException
+     * @throws \Azonmedia\Exceptions\InvalidArgumentException
+     * @throws \Guzaba2\Base\Exceptions\RunTimeException
+     * @throws \Guzaba2\Coroutine\Exceptions\ContextDestroyedException
+     * @throws \ReflectionException
+     */
     public static function get_link_location(NavigationLink $Link): string
     {
         $record = $Link->get_record_data();
         return self::get_link_location_from_record($record);
     }
-    
+
+    /**
+     * @param iterable $record
+     * @return string
+     * @throws InvalidArgumentException
+     * @throws LogicException
+     * @throws \Azonmedia\Exceptions\InvalidArgumentException
+     * @throws \Guzaba2\Base\Exceptions\RunTimeException
+     * @throws \Guzaba2\Coroutine\Exceptions\ContextDestroyedException
+     * @throws \ReflectionException
+     */
+    public static function get_link_frontend_location_from_record(iterable $record): string
+    {
+        $ret = self::get_link_location_from_record($record);
+        $type = self::get_link_type_from_record($record);
+        if (in_array($type, [ NavigationLink::TYPE['CONTROLLER'], NavigationLink::TYPE['OBJECT']] )) {
+            $ret = substr($ret, strlen(GuzabaPlatform::API_ROUTE_PREFIX));//this is a front-end route
+        }
+        return $ret;
+    }
+
+    /**
+     * Equivalent to @see self::get_link_location() but for the front-end.
+     * The frontend link is without the GuzabaPlatform::API_ROUTE_PREFIX
+     * @param NavigationLink $Link
+     * @return string
+     * @throws InvalidArgumentException
+     * @throws LogicException
+     * @throws \Azonmedia\Exceptions\InvalidArgumentException
+     * @throws \Guzaba2\Base\Exceptions\RunTimeException
+     * @throws \Guzaba2\Coroutine\Exceptions\ContextDestroyedException
+     * @throws \ReflectionException
+     */
+    public static function get_link_frontend_location(NavigationLink $Link): string
+    {
+        $record = $Link->get_record_data();
+        return self::get_link_frontend_location_from_record($record);
+    }
+
+    /**
+     * @param iterable $record
+     * @return string
+     * @throws InvalidArgumentException
+     */
     public static function get_link_type_from_record(iterable $record): string
     {
         self::validate_link_record($record);
@@ -247,12 +312,22 @@ ORDER BY
         return $ret;
     }
 
+    /**
+     * @param NavigationLink $Link
+     * @return string
+     * @throws InvalidArgumentException
+     */
     public static function get_link_type(NavigationLink $Link): string
     {
         $record = $Link->get_record_data();
         return self::get_link_type_from_record($record);
     }
 
+    /**
+     * @param iterable $record
+     * @throws InvalidArgumentException
+     * @throws \Azonmedia\Exceptions\InvalidArgumentException
+     */
     protected static function validate_link_record(iterable $record): void
     {
         //$link_properties = NavigationLink::get_property_names();
@@ -328,6 +403,7 @@ ORDER BY
      * Instead the match will be done by the route which is known - from the ActiveRecord model (and is not expected to be changed).
      * It is possible a controller to define another route for viewing an object but instead and usually it should override the default route defined in the ActiveRecord model.
      * The match of the route is done by the ending /{uuid} section in the route.
+     * It returns a link with the object UUID in it
      * @see RoutingMiddlewareInterface
      * @see ActiveRecordDefaultRoutingMap
      * @see ActiveRecordDefaultController

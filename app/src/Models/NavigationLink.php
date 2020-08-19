@@ -41,11 +41,54 @@ class NavigationLink extends BaseActiveRecord
         'OBJECT'        => 'object',
     ];
 
+    /**
+     * Where the link points to in the API
+     * @var string
+     */
     public string $link_location = '';
 
+    /**
+     * The same as $link_location but for the front end.
+     * The front end links different from the backend API link by the removed GuzabaPlatform::API_ROUTE_PREFIX
+     * For the links of the REDIRECT this is the same like $link_location
+     * It is also the same for type HOLDER but this type is not meant to be shown in the frontend
+     * @var string
+     */
+    public string $link_frontend_location = '';
+
+    /**
+     * @see self::TYPE
+     * @var string
+     */
     public string $link_type = '';
 
+    /**
+     * A human readable description of link type and location
+     * @var string
+     */
     public string $link_type_description = '';
+
+
+    protected function _before_delete() : void
+    {
+        foreach ($this->get_children() as $Link) {
+            $Link->delete();
+        }
+    }
+
+    protected function _before_write() : void
+    {
+        //the newly added link must always be last
+        if ($this->is_new()) {
+            $siblings = $this->get_siblings();
+            if (count($siblings)) {
+                $this->link_order = $siblings[ count($siblings) - 1]->link_order + 1;
+            } else {
+                $this->link_order = 1;
+            }
+
+        }
+    }
 
     protected function _before_get_link_location(): void
     {
@@ -57,6 +100,18 @@ class NavigationLink extends BaseActiveRecord
     protected function _before_set_link_location(string $link_location): string
     {
         throw new RunTimeException(sprintf(t::_('The link_location property is read only.')));
+    }
+
+    protected function _before_get_link_frontend_location(): void
+    {
+        if (!$this->link_fronend_location) {
+            $this->link_frontend_location = $this->get_frontend_location();
+        }
+    }
+
+    protected function _before_set_link_frontend_location(string $link_frontend_location): string
+    {
+        throw new RunTimeException(sprintf(t::_('The link_frontend_location property is read only.')));
     }
 
     protected function _before_get_link_type(): void
@@ -129,7 +184,6 @@ class NavigationLink extends BaseActiveRecord
             }
         }
 
-
         $Link = new static();
         $Link->link_name = $link_name;
         $Link->parent_link_id = $parent_link_id;
@@ -187,41 +241,53 @@ class NavigationLink extends BaseActiveRecord
         return $ret;
     }
 
-    protected function _before_delete() : void
-    {
-        foreach ($this->get_children() as $Link) {
-            $Link->delete();
-        }
-    }
-
-    protected function _before_write() : void
-    {
-        //the newly added link must always be last
-        if ($this->is_new()) {
-            $siblings = $this->get_siblings();
-            if (count($siblings)) {
-                $this->link_order = $siblings[ count($siblings) - 1]->link_order + 1;
-            } else {
-                $this->link_order = 1;
-            }
-
-        }
-    }
-
-
+    /**
+     * @see self::link_type_description
+     * @return string
+     */
     public function get_type_description(): string
     {
         return Navigation::get_link_type_description($this);
     }
 
+    /**
+     * @see self::link_type
+     * @return string
+     * @throws InvalidArgumentException
+     */
     public function get_type(): string
     {
         return Navigation::get_link_type($this);
     }
 
+    /**
+     * @see self::link_location
+     * @return string
+     * @throws InvalidArgumentException
+     * @throws RunTimeException
+     * @throws \Azonmedia\Exceptions\InvalidArgumentException
+     * @throws \Guzaba2\Base\Exceptions\LogicException
+     * @throws \Guzaba2\Coroutine\Exceptions\ContextDestroyedException
+     * @throws \ReflectionException
+     */
     public function get_location(): string
     {
         return Navigation::get_link_location($this);
+    }
+
+    /**
+     * @see self::link_frontend_location
+     * @return string
+     * @throws InvalidArgumentException
+     * @throws RunTimeException
+     * @throws \Azonmedia\Exceptions\InvalidArgumentException
+     * @throws \Guzaba2\Base\Exceptions\LogicException
+     * @throws \Guzaba2\Coroutine\Exceptions\ContextDestroyedException
+     * @throws \ReflectionException
+     */
+    public function get_frontend_location(): string
+    {
+        return Navigation::get_link_frontend_location($this);
     }
 
 }
