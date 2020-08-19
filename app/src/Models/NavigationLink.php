@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GuzabaPlatform\Navigation\Models;
 
+use Guzaba2\Authorization\Role;
 use Guzaba2\Base\Exceptions\InvalidArgumentException;
 use Guzaba2\Base\Exceptions\RunTimeException;
 use Guzaba2\Orm\ActiveRecordCollection;
@@ -16,13 +17,14 @@ use Guzaba2\Translator\Translator as t;
  * Class NavigationLink
  * @package GuzabaPlatform\Navigation\Models
  * @property int link_id
- * @property ?int parent_link_id
- * @property ?string link_class_name
+ * @property null|int parent_link_id
+ * @property mull|string link_class_name
  * @property string link_class_action
- * @property ?int link_object_id
+ * @property null|int link_object_id
  * @property string link_name
- * @property ?string link_redirect
  * @property int link_order
+ * @property null|string link_redirect
+ * @property null|int role_id
  */
 class NavigationLink extends BaseActiveRecord
 {
@@ -145,6 +147,7 @@ class NavigationLink extends BaseActiveRecord
      * @param string|null $link_class_action
      * @param string|null $link_object_uuid
      * @param string|null $link_redirect
+     * @param string|null $role_uuid To be provided when the link should be the home link for a given role
      * @return NavigationLink
      * @throws InvalidArgumentException
      * @throws \Azonmedia\Exceptions\InvalidArgumentException
@@ -154,7 +157,7 @@ class NavigationLink extends BaseActiveRecord
      * @throws \Guzaba2\Kernel\Exceptions\ConfigurationException
      * @throws \ReflectionException
      */
-    public static function create(string $link_name, ?string $parent_link_uuid = NULL, ?string $link_class_name = NULL, ?string $link_class_action = NULL, ?string $link_object_uuid = NULL, ?string $link_redirect = NULL) : self
+    public static function create(string $link_name, ?string $parent_link_uuid = NULL, ?string $link_class_name = NULL, ?string $link_class_action = NULL, ?string $link_object_uuid = NULL, ?string $link_redirect = NULL, ?string $role_uuid = NULL) : self
     {
         $parent_link_id = NULL;
         if ($parent_link_uuid) {
@@ -183,6 +186,14 @@ class NavigationLink extends BaseActiveRecord
                 throw new InvalidArgumentException(sprintf(t::_('The provided link_class_action %1$s is not a method on class %2$s.'), $link_class_action, $link_class_name));
             }
         }
+        if ($role_uuid && $parent_link_uuid) {
+            throw new InvalidArgumentException(sprintf(t::_('Both link_parent_uuid and role_uuid are provided. Home links for roles can only be links without parent link.')));
+        }
+        $role_id = null;
+        if ($role_uuid) {
+            $Role = new Role($role_uuid);//leave the exception to bubble
+            $role_id = $Role->get_id();
+        }
 
         $Link = new static();
         $Link->link_name = $link_name;
@@ -191,6 +202,7 @@ class NavigationLink extends BaseActiveRecord
         $Link->link_class_action = $link_class_action;
         $Link->link_object_id = $link_object_id;
         $Link->link_redirect = $link_redirect;
+        $Link->role_id = $role_id;
         $Link->write();
         return $Link;
     }
