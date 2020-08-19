@@ -16,8 +16,8 @@
                 Title: {{node.link_name}}
                 - path: <i>{{path.join(',')}}</i>
                 -->
-                {{index}}. {{ node.link_name }}
-                ( {{path.join(' => ')}} )
+                {{index}}. <strong>{{node.link_name}}</strong> ({{node.link_type_description}})
+                <!-- ( {{path.join(' => ')}} ) -->
             </span>
         </TreeC>
 
@@ -152,13 +152,9 @@
             },
             get_navigation_links() {
                 let url = '/admin/navigation'
-                let self = this
                 this.$http.get(url).
-                    then(function(resp) {
-                        //self.TreeData = resp.data.TreeData;
-                        self.TreeData = Object.values(resp.data.links);
-                        //let TreeData = Object.values(resp.data.links);
-
+                    then( resp => {
+                        this.TreeData = Object.values(resp.data.links)
                     });
             }
         },
@@ -179,6 +175,11 @@
     .highlighted
     {
         background-color: deepskyblue;
+    }
+    .tree-node
+    {
+        border: 1px solid red !important;
+        border-radius: 5px;
     }
 
 </style>

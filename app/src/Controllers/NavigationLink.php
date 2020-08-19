@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GuzabaPlatform\Navigation\Controllers;
 
+use Guzaba2\Base\Exceptions\RunTimeException;
 use Guzaba2\Http\Method;
 use GuzabaPlatform\Platform\Application\BaseController;
 use Psr\Http\Message\ResponseInterface;
@@ -27,6 +28,7 @@ class NavigationLink extends BaseController
     ];
 
     protected const CONFIG_RUNTIME = [];
+    
 
     /**
      * Creates a new link.
@@ -45,5 +47,4 @@ class NavigationLink extends BaseController
         ];
         return self::get_structured_ok_response($struct);
     }
-
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GuzabaPlatform\Navigation\Models;
 
 use Guzaba2\Base\Exceptions\InvalidArgumentException;
+use Guzaba2\Base\Exceptions\RunTimeException;
 use Guzaba2\Orm\ActiveRecordCollection;
 use Guzaba2\Orm\Store\Sql\Mysql;
 use GuzabaPlatform\Platform\Application\BaseActiveRecord;
@@ -32,6 +33,55 @@ class NavigationLink extends BaseActiveRecord
     ];
 
     protected const CONFIG_RUNTIME = [];
+
+    public const TYPE = [
+        'HOLDER'        => 'holder',
+        'REDIRECT'      => 'redirect',
+        'CONTROLLER'    => 'controller',
+        'OBJECT'        => 'object',
+    ];
+
+    public string $link_location = '';
+
+    public string $link_type = '';
+
+    public string $link_type_description = '';
+
+    protected function _before_get_link_location(): void
+    {
+        if (!$this->link_location) {
+            $this->link_location = $this->get_location();
+        }
+    }
+
+    protected function _before_set_link_location(string $link_location): string
+    {
+        throw new RunTimeException(sprintf(t::_('The link_location property is read only.')));
+    }
+
+    protected function _before_get_link_type(): void
+    {
+        if (!$this->link_type) {
+            $this->link_type = $this->get_type();
+        }
+    }
+
+    protected function _before_set_link_type(string $link_type): string
+    {
+        throw new RunTimeException(sprintf(t::_('The link_type property is read only.')));
+    }
+
+    protected function _before_get_link_type_description(): void
+    {
+        if (!$this->link_location) {
+            $this->link_location = $this->get_type_description();
+        }
+    }
+
+    protected function _before_set_link_type_description(string $link_type_description): string
+    {
+        throw new RunTimeException(sprintf(t::_('The link_location property is read only.')));
+    }
 
     /**
      * @param string $link_name
@@ -157,4 +207,21 @@ class NavigationLink extends BaseActiveRecord
 
         }
     }
+
+
+    public function get_type_description(): string
+    {
+        return Navigation::get_link_type_description($this);
+    }
+
+    public function get_type(): string
+    {
+        return Navigation::get_link_type($this);
+    }
+
+    public function get_location(): string
+    {
+        return Navigation::get_link_location($this);
+    }
+
 }
