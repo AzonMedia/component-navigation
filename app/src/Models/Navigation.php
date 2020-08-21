@@ -421,6 +421,11 @@ ORDER BY
     {
         Method::validate_method($method);
 
+        $alias = $Object->get_alias();
+        if ($alias) {
+            return GuzabaPlatform::API_ROUTE_PREFIX.'/'.$alias;
+        }
+
         $class = get_class($Object);
 
         $ret = null;
