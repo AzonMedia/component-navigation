@@ -169,7 +169,7 @@ ORDER BY
         $link_type = self::get_link_type_from_record($record);
         switch ($link_type) {
             case NavigationLink::TYPE['HOLDER']:
-                $ret = sprintf(t::_('Controller: %1$s::%2$s'), $record['link_class_name'], $record['link_class_action']);
+                $ret = sprintf(t::_('Holder link'));
                 break;
             case NavigationLink::TYPE['CONTROLLER']:
                 $ret = sprintf(t::_('Controller: %1$s::%2$s'), $record['link_class_name'], $record['link_class_action']);

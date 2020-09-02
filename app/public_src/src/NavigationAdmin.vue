@@ -10,7 +10,7 @@
         <div style="clear:both"></div>
 
         <TreeC :value="TreeData">
-            <span slot-scope="{node, index, path, tree}" @click="highlight_link(node)" @dblclick="edit_link_handler(node)" :class="{ highlighted: node.meta_object_uuid === ModalData.HighlightedLink.meta_object_uuid}">
+            <span slot-scope="{node, index, path, tree}" @click="highlight_link(node)" @dblclick="edit_link_handler(node)" :class="{ highlighted_element: node.meta_object_uuid === ModalData.HighlightedLink.meta_object_uuid}">
                 <!--
                 <b>{{index}}</b>
                 Title: {{node.link_name}}
@@ -172,10 +172,6 @@
 </script>
 
 <style scoped>
-    .highlighted
-    {
-        background-color: deepskyblue;
-    }
     .tree-node
     {
         border: 1px solid red !important;
