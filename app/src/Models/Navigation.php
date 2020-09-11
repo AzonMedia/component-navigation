@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GuzabaPlatform\Navigation\Models;
 
+use Guzaba2\Authorization\Exceptions\PermissionDeniedException;
 use Guzaba2\Base\Base;
 use Guzaba2\Base\Exceptions\InvalidArgumentException;
 use Guzaba2\Base\Exceptions\LogicException;
@@ -88,13 +89,15 @@ class Navigation extends Base
     }
 
     /**
-     * Returns multidimensional array with the navigation structure (tree)
+     * Returns multidimensional array with the navigation structure (tree).
+     * If certain object is not allowed to be read it will be excluded from the returned links.
+     * Unless the $with_links_without_read_permission is provided in which case the link_type_description & link_location & link_frontend_location will be empty.
      * @param int|null $root_link_id
-     * @param bool $include_type_description
+     * @param bool $with_links_without_read_permission
      * @return array
      * @throws \Guzaba2\Base\Exceptions\RunTimeException
      */
-    public static function get_all_links(?int $root_link_id = null) : array
+    public static function get_all_links(?int $root_link_id = null, bool $with_links_without_read_permission = false) : array
     {
         /** @var ConnectionInterface $Connection */
         $Connection = self::get_service('ConnectionFactory')->get_connection(MysqlConnectionCoroutine::class, $CON);
@@ -125,13 +128,34 @@ ORDER BY
             'meta_class_id'   => $meta_class_id,
         ];
         $data = $Connection->prepare($q)->execute($b)->fetchAll();
-        foreach ($data as &$_row) {
-            $_row['link_type'] = self::get_link_type_from_record($_row);
-            $_row['link_type_description'] = self::get_link_type_description_from_record($_row);
-            $_row['link_location'] = self::get_link_location_from_record($_row);
-            $_row['link_frontend_location'] = self::get_link_frontend_location_from_record($_row);
+        $ret_data = [];
+//        foreach ($data as &$_row) {
+//            $_row['link_type'] = self::get_link_type_from_record($_row);
+//            $_row['link_type_description'] = self::get_link_type_description_from_record($_row);
+//            $_row['link_location'] = self::get_link_location_from_record($_row);
+//            $_row['link_frontend_location'] = self::get_link_frontend_location_from_record($_row);
+//        }
+//        unset($_row);
+        foreach ($data as $row) {
+            try {
+                $row['link_type'] = self::get_link_type_from_record($row);
+                $row['link_type_description'] = self::get_link_type_description_from_record($row);
+                $row['link_location'] = self::get_link_location_from_record($row);
+                $row['link_frontend_location'] = self::get_link_frontend_location_from_record($row);
+                $ret_data[] = $row;
+            } catch (PermissionDeniedException $Exception) {
+                if ($with_links_without_read_permission) {
+                    $row['link_type'] = self::get_link_type_from_record($row);//this does not throw PermissionDeniedException + it is always good to have the type
+                    //the rest are empty
+                    $row['link_type_description'] = $row['link_location'] = $row['link_frontend_location'] = '';
+                    $ret_data[] = $row;
+                } else {
+                    //skip this link altoghether from the navigation
+                }
+            }
         }
-        unset($_row);
+        $data = $ret_data;
+
 
         $Function = static function (?int $parent_link_id) use ($data, &$Function) : array
         {
@@ -178,6 +202,7 @@ ORDER BY
                 /** @var ActiveRecordInterface $Object */
                 $Object = new $record['link_class_name']($record['link_object_id']);
                 $ret = sprintf(t::_('Object: %1$s %2$s "%3$s"'), $record['link_class_name'], $record['link_object_id'], $Object->get_object_name() );
+
                 break;
             case NavigationLink::TYPE['REDIRECT']:
                 $ret = sprintf(t::_('Redirect: %1$s'), $record['link_redirect']);
