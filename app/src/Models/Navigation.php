@@ -20,6 +20,7 @@ use Guzaba2\Translator\Translator as t;
 use GuzabaPlatform\Platform\Application\GuzabaPlatform;
 use GuzabaPlatform\Platform\Application\Middlewares;
 use GuzabaPlatform\Platform\Application\MysqlConnectionCoroutine;
+use GuzabaPlatform\Platform\Crypto\Models\Crypto;
 
 
 /**
@@ -295,6 +296,17 @@ ORDER BY
         $type = self::get_link_type_from_record($record);
         if (in_array($type, [ NavigationLink::TYPE['CONTROLLER'], NavigationLink::TYPE['OBJECT']] )) {
             $ret = substr($ret, strlen(GuzabaPlatform::API_ROUTE_PREFIX));//this is a front-end route
+        } elseif (in_array($type, [NavigationLink::TYPE['REDIRECT']] )) {
+            //$ret = '/redirect?to='.$ret;//cant be plain text
+            //the frontend will be susceptible to injections - anyone can use the redirect component to redirect to somewhere
+//            try {
+//                $ret = '/redirect/' . Crypto::openssl_encrypt($ret);
+//            } catch (\Exception $E) {
+//                print $E->getMessage();
+//            }
+            //$ret = 'ggggg';
+
+            $ret = '/redirect/' . Crypto::openssl_encrypt($ret);
         }
         return $ret;
     }

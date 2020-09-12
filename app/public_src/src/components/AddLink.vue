@@ -72,6 +72,7 @@
                     link_class_name: '',//both the Controller tab and Object tab use this
                     link_class_action: '',
                     link_object_uuid: '',
+                    link_redirect: '',
                 },
                 FrontendRoutes: [],
                 ModelClasses: [],
