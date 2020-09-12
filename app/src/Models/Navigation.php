@@ -20,7 +20,7 @@ use Guzaba2\Translator\Translator as t;
 use GuzabaPlatform\Platform\Application\GuzabaPlatform;
 use GuzabaPlatform\Platform\Application\Middlewares;
 use GuzabaPlatform\Platform\Application\MysqlConnectionCoroutine;
-use GuzabaPlatform\Platform\Crypto\Models\Crypto;
+use GuzabaPlatform\Platform\Crypto\Models\CryptoUtil;
 
 
 /**
@@ -306,7 +306,7 @@ ORDER BY
 //            }
             //$ret = 'ggggg';
 
-            $ret = '/redirect/' . Crypto::openssl_encrypt($ret);
+            $ret = '/redirect/' . CryptoUtil::openssl_encrypt($ret);
         }
         return $ret;
     }
