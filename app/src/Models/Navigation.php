@@ -221,7 +221,7 @@ ORDER BY
     public static function get_link_type_description(NavigationLink $Link): string
     {
         $record = $Link->get_record_data();
-        return self::get_link_description_from_record($record);
+        return self::get_link_type_description_from_record($record);
     }
 
     /**
@@ -304,9 +304,15 @@ ORDER BY
 //            } catch (\Exception $E) {
 //                print $E->getMessage();
 //            }
-            //$ret = 'ggggg';
 
-            $ret = '/redirect/' . CryptoUtil::openssl_encrypt($ret);
+            //$ret = '/redirect/' . CryptoUtil::openssl_encrypt($ret);
+            if (parse_url($ret, PHP_URL_SCHEME)) {
+                //this is an external redirect
+                $ret = '/redirect/' . CryptoUtil::openssl_encrypt($ret);
+            } else {
+                //this is a local path (should be present in the routes!!!)
+                //leave unmodified
+            }
         }
         return $ret;
     }

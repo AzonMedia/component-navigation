@@ -94,8 +94,9 @@ class NavigationLink extends BaseActiveRecord
 
     protected function _before_get_link_location(): void
     {
-        if (!$this->link_location) {
-            $this->link_location = $this->get_location();
+        //if (!$this->link_location) {
+        if (!$this->record_data['link_location']) { //this is recurions - goes through the overloading as the properties are unset in the constructor
+            $this->record_data['link_location'] = $this->get_location();//do not use the __set overloading as it is disabled - it is not allowed to set link_location
         }
     }
 
@@ -106,8 +107,8 @@ class NavigationLink extends BaseActiveRecord
 
     protected function _before_get_link_frontend_location(): void
     {
-        if (!$this->link_fronend_location) {
-            $this->link_frontend_location = $this->get_frontend_location();
+        if (!$this->record_data['link_frontend_location']) {
+            $this->record_data['link_frontend_location'] = $this->get_frontend_location();
         }
     }
 
@@ -118,8 +119,8 @@ class NavigationLink extends BaseActiveRecord
 
     protected function _before_get_link_type(): void
     {
-        if (!$this->link_type) {
-            $this->link_type = $this->get_type();
+        if (!$this->record_data['link_type']) {
+            $this->record_data['link_type'] = $this->get_type();
         }
     }
 
@@ -130,14 +131,14 @@ class NavigationLink extends BaseActiveRecord
 
     protected function _before_get_link_type_description(): void
     {
-        if (!$this->link_location) {
-            $this->link_location = $this->get_type_description();
+        if (!$this->record_data['link_type_description']) {
+            $this->record_data['link_type_description'] = $this->get_type_description();
         }
     }
 
     protected function _before_set_link_type_description(string $link_type_description): string
     {
-        throw new RunTimeException(sprintf(t::_('The link_location property is read only.')));
+        throw new RunTimeException(sprintf(t::_('The link_type_description property is read only.')));
     }
 
     /**
