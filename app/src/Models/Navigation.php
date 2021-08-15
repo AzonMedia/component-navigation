@@ -259,7 +259,12 @@ ORDER BY
                 throw new LogicException(sprintf(t::_('An unexpected link type %1$s was found.'), $link_type));
         }
         if (!$ret) {
-            throw new LogicException(sprintf(t::_('No link location could be retreived for link "%1$s".'), self::get_link_type_description_from_record($record)));
+            $message = sprintf(
+                t::_('No link location could be retrieved for link "%1$s" of type %2$s.'),
+                self::get_link_type_description_from_record($record),
+                $link_type
+            );
+            throw new LogicException($message);
         }
         return $ret;
     }
@@ -478,9 +483,10 @@ ORDER BY
         $RoutingMiddleware = $Middlewares->get_middleware(RoutingMiddlewareInterface::class);
         $Router = $RoutingMiddleware->get_router();
         $meta_data = $Router->get_all_meta_data();
-
         foreach ($meta_data as $route => $methods) {
             foreach ($methods as $route_method => $meta) {
+
+
                 if (
                     isset($meta['class']) && $class === $meta['class']
                     && preg_match('/\/{uuid}/', $route)

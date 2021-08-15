@@ -95,7 +95,7 @@ class NavigationLink extends BaseActiveRecord
     protected function _before_get_link_location(): void
     {
         //if (!$this->link_location) {
-        if (!$this->record_data['link_location']) { //this is recurions - goes through the overloading as the properties are unset in the constructor
+        if (!$this->record_data['link_location']) { //this is recursion - goes through the overloading as the properties are unset in the constructor
             $this->record_data['link_location'] = $this->get_location();//do not use the __set overloading as it is disabled - it is not allowed to set link_location
         }
     }
